@@ -93,10 +93,15 @@ export class ScheduledJobManager {
     try {
       const ticketmasterClient = getTicketmasterClient()
       
-      // Calculate date range for next 30 days
-      const startDate = new Date()
-      const endDate = new Date()
-      endDate.setDate(startDate.getDate() + 30)
+      // TEMPORARY: FOR TESTING SEPTEMBER 2025 DATA
+      // To revert, uncomment the original date calculation below and remove these lines
+      const startDate = new Date('2025-09-01T00:00:00Z')
+      const endDate = new Date('2025-09-30T23:59:59Z')
+      
+      // Original date calculation (uncomment to revert):
+      // const startDate = new Date()
+      // const endDate = new Date()
+      // endDate.setDate(startDate.getDate() + 30)
 
       const startDateTime = startDate.toISOString()
       const endDateTime = endDate.toISOString()
