@@ -6,7 +6,7 @@ import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from "lucide-reac
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useSearchConcerts } from "@/hooks/useConcerts";
+import { useConcertsByDate } from "@/hooks/useConcerts";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, addMonths, subMonths } from "date-fns";
 
 const Calendar = () => {
@@ -14,12 +14,9 @@ const Calendar = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
   // Get concerts for the selected date
-  const { data: concerts = [], isLoading } = useSearchConcerts({
-    dateRange: {
-      start: format(selectedDate, 'yyyy-MM-dd'),
-      end: format(selectedDate, 'yyyy-MM-dd')
-    }
-  });
+  const { data: concerts = [], isLoading } = useConcertsByDate(
+    format(selectedDate, 'yyyy-MM-dd')
+  );
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);

@@ -5,149 +5,70 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIU
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
-// Types for our database tables
-export type Borough = 'manhattan' | 'brooklyn' | 'queens' | 'bronx' | 'staten_island'
-export type Source = 'manual' | 'ticketmaster' | 'eventbrite'
-
-export interface Venue {
-  id: string
-  name: string
-  address: string
-  borough: Borough
-  capacity?: number
-  website?: string
-  created_at: string
-  updated_at: string
-}
-
+// Simple types matching the new concerts table structure
 export interface Concert {
   id: string
   artist: string
-  venue_id: string
-  venue?: Venue
+  venue: string
   date: string
   time?: string
-  price: string
-  genres: string[]
-  description?: string
-  ticket_url?: string
-  image_url?: string
-  source: Source
-  external_id?: string
-  created_at: string
-  updated_at: string
+  price: number
+  ticketUrl?: string
 }
 
 // Helper functions for database operations
 export const concertQueries = {
-  // Get all concerts with venue information
+  // Get all concerts
   async getAll() {
     const { data, error } = await supabase
       .from('concerts')
-      .select(`
-        *,
-        venue:venues(*)
-      `)
+      .select('*')
       .order('date', { ascending: true })
     
     if (error) throw error
-    return data as (Concert & { venue: Venue })[]
+    return data as Concert[]
   },
 
-  // Search concerts by filters
-  async search(filters: {
-    query?: string
-    genre?: string
-    borough?: Borough
-    priceRange?: 'free' | '0-35' | '35-50' | '50-100' | '100+'
-    dateRange?: { start: string; end: string }
-  }) {
+  // Search concerts by text query
+  async search(query: string) {
     let query = supabase
       .from('concerts')
-      .select(`
-        *,
-        venue:venues(*)
-      `)
+      .select('*')
 
-    // Text search
-    if (filters.query) {
-      query = query.or(`artist.ilike.%${filters.query}%,description.ilike.%${filters.query}%`)
+    if (query) {
+      queryBuilder = queryBuilder.or(`artist.ilike.%${query}%,venue.ilike.%${query}%`)
     }
 
-    // Genre filter
-    if (filters.genre) {
-      query = query.contains('genres', [filters.genre])
-    }
+    queryBuilder = queryBuilder.order('date', { ascending: true })
 
-    // Borough filter
-    if (filters.borough) {
-      query = query.eq('venue.borough', filters.borough)
-    }
-
-    // Price range filter
-    if (filters.priceRange) {
-      switch (filters.priceRange) {
-        case 'free':
-          query = query.eq('price', 'free')
-          break
-        case '0-35':
-          // Include free concerts and concerts under $35
-          query = query.or('price.eq.free,price.lte.35')
-          break
-        case '35-50':
-          query = query.gte('price', '35').lte('price', '50')
-          break
-        case '50-100':
-          query = query.gte('price', '50').lte('price', '100')
-          break
-        case '100+':
-          query = query.gt('price', '100')
-          break
-      }
-    }
-
-    // Date range filter
-    if (filters.dateRange) {
-      query = query
-        .gte('date', filters.dateRange.start)
-        .lte('date', filters.dateRange.end)
-    }
-
-    query = query.order('date', { ascending: true })
-
-    const { data, error } = await query
+    const { data, error } = await queryBuilder
     if (error) throw error
-    return data as (Concert & { venue: Venue })[]
+    return data as Concert[]
   },
 
-  // Get concerts by genre
-  async getByGenre(genre: string) {
+  // Get concerts by date
+  async getByDate(date: string) {
     const { data, error } = await supabase
       .from('concerts')
-      .select(`
-        *,
-        venue:venues(*)
-      `)
-      .contains('genres', [genre])
+      .select('*')
+      .eq('date', date)
       .order('date', { ascending: true })
     
     if (error) throw error
-    return data as (Concert & { venue: Venue })[]
+    return data as Concert[]
   },
 
-  // Get free concerts
-  async getFree() {
+  // Get concerts by date range
+  async getByDateRange(startDate: string, endDate: string) {
     const { data, error } = await supabase
       .from('concerts')
-      .select(`
-        *,
-        venue:venues(*)
-      `)
-      .eq('price', 'free')
+      .select('*')
+      .gte('date', startDate)
+      .lte('date', endDate)
       .order('date', { ascending: true })
     
     if (error) throw error
-    return data as (Concert & { venue: Venue })[]
+    return data as Concert[]
   },
 
   // Get upcoming concerts
@@ -155,40 +76,12 @@ export const concertQueries = {
     const today = new Date().toISOString().split('T')[0]
     const { data, error } = await supabase
       .from('concerts')
-      .select(`
-        *,
-        venue:venues(*)
-      `)
+      .select('*')
       .gte('date', today)
       .order('date', { ascending: true })
       .limit(limit)
     
     if (error) throw error
-    return data as (Concert & { venue: Venue })[]
-  }
-}
-
-export const venueQueries = {
-  // Get all venues
-  async getAll() {
-    const { data, error } = await supabase
-      .from('venues')
-      .select('*')
-      .order('name')
-    
-    if (error) throw error
-    return data as Venue[]
-  },
-
-  // Get venues by borough
-  async getByBorough(borough: Borough) {
-    const { data, error } = await supabase
-      .from('venues')
-      .select('*')
-      .eq('borough', borough)
-      .order('name')
-    
-    if (error) throw error
-    return data as Venue[]
+    return data as Concert[]
   }
 }

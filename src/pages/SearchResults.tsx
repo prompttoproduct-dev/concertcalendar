@@ -1,22 +1,22 @@
 import { useState } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
-import { SearchForm } from "@/components/SearchForm";
 import { ConcertList } from "@/components/ConcertList";
-import { useSearchConcerts, type SearchFilters } from "@/hooks/useConcerts";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Search } from "lucide-react";
+import { useSearchConcerts } from "@/hooks/useConcerts";
 
 const SearchResults = () => {
-  const [filters, setFilters] = useState<SearchFilters>({});
-  const { data: concerts = [], isLoading, error } = useSearchConcerts(filters);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeQuery, setActiveQuery] = useState("");
+  
+  const { data: concerts = [], isLoading, error } = useSearchConcerts(activeQuery);
 
-  const handleSearch = (newFilters: SearchFilters) => {
-    setFilters(newFilters);
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setActiveQuery(searchQuery);
   };
-
-  const hasActiveSearch = Object.keys(filters).some(key => 
-    filters[key as keyof SearchFilters] !== undefined && 
-    filters[key as keyof SearchFilters] !== ''
-  );
 
   return (
     <div className="min-h-screen bg-gradient-hero">
@@ -32,23 +32,34 @@ const SearchResults = () => {
               Search Concerts
             </h1>
             <p className="text-xl text-muted-foreground">
-              Find your next favorite show across NYC
+              Find concerts by artist or venue name
             </p>
           </div>
           
-          <SearchForm 
-            onSearch={handleSearch}
-            initialFilters={filters}
-            className="max-w-4xl mx-auto"
-          />
+          <form onSubmit={handleSearch} className="max-w-2xl mx-auto">
+            <div className="flex gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <Input
+                  placeholder="Search artists or venues..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-12"
+                />
+              </div>
+              <Button type="submit" variant="hero">
+                Search
+              </Button>
+            </div>
+          </form>
         </div>
 
         {/* Results */}
         <div>
-          {hasActiveSearch && (
+          {activeQuery && (
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-foreground mb-2">
-                Search Results
+                Search Results for "{activeQuery}"
               </h2>
               <p className="text-muted-foreground">
                 {isLoading 
@@ -64,9 +75,9 @@ const SearchResults = () => {
             isLoading={isLoading}
             error={error}
             emptyMessage={
-              hasActiveSearch 
-                ? "No concerts match your search criteria. Try adjusting your filters."
-                : "Enter search terms or select filters to find concerts."
+              activeQuery 
+                ? "No concerts match your search. Try different keywords."
+                : "Enter a search term to find concerts."
             }
           />
         </div>
