@@ -6,7 +6,7 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIU
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 // Types for our database tables
-export type Source = 'manual' | 'ticketmaster' | 'eventbrite'
+export type Source = 'manual' | 'ticketmaster'
 
 export interface Concert {
   id: string

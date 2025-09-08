@@ -59,15 +59,71 @@ interface TicketmasterResponse {
   }
 }
 
+// Error classes for better error handling
+export class TicketmasterApiError extends Error {
+  constructor(
+    message: string,
+    public statusCode: number,
+    public endpoint: string
+  ) {
+    super(message)
+    this.name = 'TicketmasterApiError'
+  }
+}
+
+export class TicketmasterRateLimitError extends TicketmasterApiError {
+  constructor(endpoint: string) {
+    super('Ticketmaster API rate limit exceeded', 429, endpoint)
+    this.name = 'TicketmasterRateLimitError'
+  }
+}
+
 export class TicketmasterClient {
   private apiKey: string
   private baseUrl = 'https://app.ticketmaster.com/discovery/v2'
+  private requestCount = 0
+  private lastResetTime = Date.now()
+  private readonly RATE_LIMIT = 5000 // 5000 requests per day
+  private readonly RATE_WINDOW = 24 * 60 * 60 * 1000 // 24 hours
 
   constructor(apiKey: string) {
     this.apiKey = apiKey
     if (!apiKey) {
       throw new Error('Ticketmaster API key is required')
     }
+  }
+
+  private checkRateLimit(): void {
+    const now = Date.now()
+    if (now - this.lastResetTime > this.RATE_WINDOW) {
+      this.requestCount = 0
+      this.lastResetTime = now
+    }
+
+    if (this.requestCount >= this.RATE_LIMIT) {
+      throw new TicketmasterRateLimitError('rate limit exceeded')
+    }
+
+    this.requestCount++
+  }
+
+  private async makeRequest(url: string): Promise<any> {
+    this.checkRateLimit()
+
+    const response = await fetch(url)
+
+    if (!response.ok) {
+      if (response.status === 429) {
+        throw new TicketmasterRateLimitError(url)
+      }
+      throw new TicketmasterApiError(
+        `Ticketmaster API error: ${response.status} ${response.statusText}`,
+        response.status,
+        url
+      )
+    }
+
+    return response.json()
   }
 
   async searchEvents(params: {
@@ -80,6 +136,10 @@ export class TicketmasterClient {
     startDateTime?: string
     endDateTime?: string
   }): Promise<TicketmasterResponse> {
+    if (!this.apiKey) {
+      throw new TicketmasterApiError('API key not configured', 401, 'searchEvents')
+    }
+
     const searchParams = new URLSearchParams({
       apikey: this.apiKey,
       city: params.city || 'New York',
@@ -104,31 +164,28 @@ export class TicketmasterClient {
       searchParams.append('endDateTime', params.endDateTime)
     }
 
-    const response = await fetch(
-      `${this.baseUrl}/events.json?${searchParams.toString()}`
-    )
-
-    if (!response.ok) {
-      throw new Error(`Ticketmaster API error: ${response.status} ${response.statusText}`)
-    }
-
-    return response.json()
+    const url = `${this.baseUrl}/events.json?${searchParams.toString()}`
+    return this.makeRequest(url)
   }
 
   async getGenres(): Promise<any> {
-    const response = await fetch(
-      `${this.baseUrl}/classifications/genres.json?apikey=${this.apiKey}`
-    )
-
-    if (!response.ok) {
-      throw new Error(`Ticketmaster API error: ${response.status}`)
+    if (!this.apiKey) {
+      throw new TicketmasterApiError('API key not configured', 401, 'getGenres')
     }
 
-    return response.json()
+    const url = `${this.baseUrl}/classifications/genres.json?apikey=${this.apiKey}`
+    return this.makeRequest(url)
   }
 
-  // Convert Ticketmaster event to our Concert format
   transformEvent(event: TicketmasterEvent): Partial<Concert> {
+    if (!event || !event.id) {
+      throw new Error('Invalid event data provided to transformEvent')
+    }
+
+    if (!event.dates?.start?.localDate) {
+      throw new Error(`Event ${event.id} missing required start date information`)
+    }
+
     const venue = event._embedded?.venues?.[0]
     const attraction = event._embedded?.attractions?.[0]
     const image = event.images?.find(img => img.width >= 400) || event.images?.[0]
@@ -160,10 +217,15 @@ export class TicketmasterClient {
 }
 
 // Create client instance with environment variable
-export const getTicketmasterClient = (): TicketmasterClient => {
-  const apiKey = import.meta.env.VITE_TICKETMASTER_API_KEY
-  if (!apiKey) {
-    throw new Error('VITE_TICKETMASTER_API_KEY environment variable not set')
+let ticketmasterClient: TicketmasterClient | null = null
+
+export function getTicketmasterClient(): TicketmasterClient {
+  if (!ticketmasterClient) {
+    const apiKey = import.meta.env.VITE_TICKETMASTER_API_KEY
+    if (!apiKey) {
+      throw new TicketmasterApiError('VITE_TICKETMASTER_API_KEY environment variable not set', 500, 'client-init')
+    }
+    ticketmasterClient = new TicketmasterClient(apiKey)
   }
-  return new TicketmasterClient(apiKey)
+  return ticketmasterClient
 }
