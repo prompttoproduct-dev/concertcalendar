@@ -176,3 +176,5 @@ export class ScheduledJobManager {
 
 // Singleton instance - runs daily
 export const scheduledJobManager = new ScheduledJobManager(24 * 60) // 24 hours
+
+export { scheduledJobManager }
