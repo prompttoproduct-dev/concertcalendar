@@ -1,7 +1,20 @@
 import React from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { concertQueries, type Concert } from '@/lib/supabase'
+import { concertQueries, type Concert, type Venue, type Borough } from '@/lib/supabase'
 import { supabase } from '@/integrations/supabase/client'
+
+export type { Borough } from '@/lib/supabase'
+
+export type PriceRange = 'free' | '0-35' | '35-50' | '50-100' | '100+';
+
+export interface SearchFilters {
+  query?: string
+  genre?: string
+  borough?: Borough
+  priceRange?: PriceRange
+  dateRange?: { start: string; end: string }
+  sortBy?: 'date-asc' | 'date-desc' | 'price-asc' | 'price-desc' | 'artist-asc' | 'artist-desc'
+}
 
 // Hook for getting all concerts
 export const useConcerts = () => {
@@ -12,32 +25,31 @@ export const useConcerts = () => {
   })
 }
 
-// Hook for searching concerts by text
-export const useSearchConcerts = (query: string) => {
+// Hook for searching concerts
+export const useSearchConcerts = (filters: SearchFilters) => {
   return useQuery({
-    queryKey: ['concerts', 'search', query],
-    queryFn: () => concertQueries.search(query),
-    enabled: !!query,
+    queryKey: ['concerts', 'search', filters],
+    queryFn: () => concertQueries.search(filters),
+    enabled: Object.keys(filters).length > 0,
     staleTime: 2 * 60 * 1000, // 2 minutes
   })
 }
 
-// Hook for getting concerts by date
-export const useConcertsByDate = (date: string) => {
+// Hook for getting concerts by genre
+export const useConcertsByGenre = (genre: string) => {
   return useQuery({
-    queryKey: ['concerts', 'date', date],
-    queryFn: () => concertQueries.getByDate(date),
-    enabled: !!date,
+    queryKey: ['concerts', 'genre', genre],
+    queryFn: () => concertQueries.getByGenre(genre),
+    enabled: !!genre,
     staleTime: 5 * 60 * 1000,
   })
 }
 
-// Hook for getting concerts by date range
-export const useConcertsByDateRange = (startDate: string, endDate: string) => {
+// Hook for getting free concerts
+export const useFreeConcerts = () => {
   return useQuery({
-    queryKey: ['concerts', 'dateRange', startDate, endDate],
-    queryFn: () => concertQueries.getByDateRange(startDate, endDate),
-    enabled: !!startDate && !!endDate,
+    queryKey: ['concerts', 'free'],
+    queryFn: concertQueries.getFree,
     staleTime: 5 * 60 * 1000,
   })
 }
