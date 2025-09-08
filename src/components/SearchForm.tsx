@@ -7,7 +7,7 @@ import { RecentSearches } from "@/components/ui/recent-searches";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PriceFilter, type PriceRange } from "@/components/ui/price-filter";
 import { Search, Filter, X, Calendar, ArrowUpDown } from "lucide-react";
-import { type SearchFilters, type Borough } from "@/hooks/useConcerts";
+import { type SearchFilters, type Source } from "@/hooks/useConcerts";
 import { useSearchSuggestions } from "@/hooks/useSearchSuggestions";
 import { useRecentSearches } from "@/hooks/useRecentSearches";
 import { DateRange } from "react-day-picker";
@@ -21,27 +21,9 @@ interface SearchFormProps {
   showSorting?: boolean;
 }
 
-const genres = [
-  // Rock
-  'Classic Rock', 'Hard Rock', 'Progressive Rock', 'Post-Rock', 'Math Rock', 'Rock Fusion',
-  // Pop
-  'Indie Pop', 'Synth-Pop', 'Bedroom Pop',
-  // Hip Hop
-  'East Coast Hip Hop', 'West Coast Hip Hop', 'Trap', 'Cloud Rap', 'Abstract Hip Hop',
-  // Electronic
-  'Ambient', 'Drone', 'Noise', 'Vaporwave', 'Lo-fi Hip Hop', 'Early Synth Styles', 'Contemporary Digital Production',
-  // Jazz
-  'Bebop', 'Cool Jazz', 'Free Jazz', 'Nu-Jazz', 'Jazz Fusion',
-  // Classical
-  'Baroque', 'Romantic', 'Contemporary Classical', 'Neo-Classical', 'Minimalism'
-];
-
-const boroughs: { value: Borough; label: string }[] = [
-  { value: 'manhattan', label: 'Manhattan' },
-  { value: 'brooklyn', label: 'Brooklyn' },
-  { value: 'queens', label: 'Queens' },
-  { value: 'bronx', label: 'Bronx' },
-  { value: 'staten_island', label: 'Staten Island' },
+const sources: { value: Source; label: string }[] = [
+  { value: 'manual', label: 'Manual' },
+  { value: 'ticketmaster', label: 'Ticketmaster' },
 ];
 
 const priceRangeLabels: Record<PriceRange, string> = {
@@ -171,39 +153,19 @@ export const SearchForm = ({
         {showAdvanced && (
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6 p-6 bg-card rounded-lg border">
             <div>
-              <label className="text-sm font-medium mb-3 block">Genre</label>
+              <label className="text-sm font-medium mb-3 block">Source</label>
               <Select
-                value={filters.genre || ''}
-                onValueChange={(value) => handleFilterChange('genre', value || undefined)}
+                value={filters.source || ''}
+                onValueChange={(value) => handleFilterChange('source', value || undefined)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="All genres" />
+                  <SelectValue placeholder="All sources" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All genres</SelectItem>
-                  {genres.map((genre) => (
-                    <SelectItem key={genre} value={genre}>
-                      {genre}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium mb-3 block">Borough</label>
-              <Select
-                value={filters.borough || ''}
-                onValueChange={(value) => handleFilterChange('borough', value || undefined)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="All boroughs" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">All boroughs</SelectItem>
-                  {boroughs.map((borough) => (
-                    <SelectItem key={borough.value} value={borough.value}>
-                      {borough.label}
+                  <SelectItem value="">All sources</SelectItem>
+                  {sources.map((source) => (
+                    <SelectItem key={source.value} value={source.value}>
+                      {source.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -261,24 +223,12 @@ export const SearchForm = ({
                 </button>
               </div>
             )}
-            {filters.genre && (
+            {filters.source && (
               <div className="flex items-center gap-1 px-2 py-1 bg-accent text-accent-foreground rounded-full text-xs">
-                <span>{filters.genre}</span>
+                <span>{sources.find(s => s.value === filters.source)?.label}</span>
                 <button
                   type="button"
-                  onClick={() => handleFilterChange('genre', undefined)}
-                  className="hover:bg-accent-foreground/20 rounded-full p-0.5"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </div>
-            )}
-            {filters.borough && (
-              <div className="flex items-center gap-1 px-2 py-1 bg-accent text-accent-foreground rounded-full text-xs">
-                <span>{boroughs.find(b => b.value === filters.borough)?.label}</span>
-                <button
-                  type="button"
-                  onClick={() => handleFilterChange('borough', undefined)}
+                  onClick={() => handleFilterChange('source', undefined)}
                   className="hover:bg-accent-foreground/20 rounded-full p-0.5"
                 >
                   <X className="h-3 w-3" />

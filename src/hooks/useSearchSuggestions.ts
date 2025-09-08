@@ -35,11 +35,11 @@ export const useSearchSuggestions = (query: string, debounceMs = 300) => {
           .ilike('artist', searchTerm)
           .limit(5),
         
-        // Search venues
+        // Search event titles
         supabase
-          .from('venues')
-          .select('name, borough')
-          .ilike('name', searchTerm)
+          .from('concerts')
+          .select('title')
+          .ilike('title', searchTerm)
           .limit(5)
       ])
 
@@ -58,36 +58,18 @@ export const useSearchSuggestions = (query: string, debounceMs = 300) => {
         })
       }
 
-      // Add venue suggestions
+      // Add event title suggestions
       if (venueResults.data) {
-        venueResults.data.forEach(venue => {
+        const uniqueTitles = [...new Set(venueResults.data.map(c => c.title).filter(Boolean))]
+        uniqueTitles.forEach(title => {
           suggestions.push({
-            id: `venue-${venue.name}`,
-            label: venue.name,
-            category: 'venue',
-            description: `Venue in ${venue.borough?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}`
+            id: `event-${title}`,
+            label: title,
+            category: 'event',
+            description: 'Event'
           })
         })
       }
-
-      // Add genre suggestions
-      const genres = [
-        'indie rock', 'electronic', 'jazz', 'hip-hop', 'folk', 'experimental',
-        'metal', 'pop', 'classical', 'punk', 'r&b', 'blues', 'reggae', 'alternative'
-      ]
-      
-      const matchingGenres = genres.filter(genre => 
-        genre.toLowerCase().includes(debouncedQuery.toLowerCase())
-      )
-      
-      matchingGenres.forEach(genre => {
-        suggestions.push({
-          id: `genre-${genre}`,
-          label: genre,
-          category: 'genre',
-          description: 'Music genre'
-        })
-      })
 
       return suggestions.slice(0, 10) // Limit to 10 suggestions
     },

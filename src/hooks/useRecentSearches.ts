@@ -98,19 +98,12 @@ const createDisplayName = (filters: SearchFilters): string => {
     parts.push(`"${filters.query}"`)
   }
 
-  if (filters.genre) {
-    parts.push(filters.genre)
-  }
-
-  if (filters.borough) {
-    const boroughNames = {
-      manhattan: 'Manhattan',
-      brooklyn: 'Brooklyn',
-      queens: 'Queens',
-      bronx: 'Bronx',
-      staten_island: 'Staten Island'
+  if (filters.source) {
+    const sourceNames = {
+      manual: 'Manual',
+      ticketmaster: 'Ticketmaster'
     }
-    parts.push(boroughNames[filters.borough])
+    parts.push(sourceNames[filters.source])
   }
 
   if (filters.priceRange) {

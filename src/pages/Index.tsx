@@ -174,14 +174,14 @@ const Index = () => {
                   {concerts.map((concert) => (
                     <div key={concert.id} className="p-4 bg-card/50 rounded-lg border border-border/50 hover:bg-accent/5 transition-smooth">
                       <div className="font-medium text-foreground mb-1">
-                        {concert.artist}
+                        {concert.title || concert.artist}
                       </div>
                       <div className="text-sm text-muted-foreground mb-2">
-                        {concert.venue?.name} • {concert.time || 'Time TBA'}
+                        {concert.venue} • {concert.time || 'Time TBA'}
                       </div>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          {concert.price === 'free' ? (
+                          {concert.price === 0 ? (
                             <Badge variant="default" className="bg-accent text-accent-foreground text-xs">
                               FREE
                             </Badge>
@@ -190,18 +190,13 @@ const Index = () => {
                               ${concert.price}
                             </span>
                           )}
-                          {concert.genres.slice(0, 1).map(genre => (
-                            <Badge key={genre} variant="outline" className="text-xs">
-                              {genre}
-                            </Badge>
-                          ))}
                         </div>
-                        {concert.ticket_url && (
+                        {concert.url && (
                           <Button
                             size="sm"
                             variant="outline"
                             className="text-xs"
-                            onClick={() => window.open(concert.ticket_url, '_blank')}
+                            onClick={() => window.open(concert.url, '_blank')}
                           >
                             Tickets
                           </Button>

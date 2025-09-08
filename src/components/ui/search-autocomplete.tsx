@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 export interface SearchSuggestion {
   id: string;
   label: string;
-  category?: 'artist' | 'venue' | 'genre';
+  category?: 'artist' | 'event';
   description?: string;
 }
 
@@ -77,9 +77,7 @@ const SearchAutocomplete = React.forwardRef<HTMLInputElement, SearchAutocomplete
       switch (category) {
         case 'artist':
           return '👤';
-        case 'venue':
-          return '📍';
-        case 'genre':
+        case 'event':
           return '🎵';
         default:
           return '🔍';
