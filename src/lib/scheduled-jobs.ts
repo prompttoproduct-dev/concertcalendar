@@ -89,9 +89,12 @@ export class ScheduledJobManager {
   private async fetchTicketmasterEvents(): Promise<{ processed: number; errors: string[] }> {
     const errors: string[] = []
     let processed = 0
+    
+    console.log('Starting Ticketmaster event fetch...')
 
     try {
       const ticketmasterClient = getTicketmasterClient()
+      console.log('Ticketmaster client created successfully')
       
       // TEMPORARY: FOR TESTING SEPTEMBER 2025 DATA
       // To revert, uncomment the original date calculation below and remove these lines
@@ -107,6 +110,7 @@ export class ScheduledJobManager {
       const endDateTime = endDate.toISOString()
 
       console.log(`Fetching Ticketmaster events from ${startDateTime} to ${endDateTime}`)
+      console.log(`Fetching Ticketmaster events from ${startDateTime} to ${endDateTime}`)
 
       const response = await ticketmasterClient.searchEvents({
         city: 'New York',
@@ -115,6 +119,7 @@ export class ScheduledJobManager {
         startDateTime,
         endDateTime
       })
+      console.log('Ticketmaster search response received:', response)
 
       if (response._embedded?.events) {
         console.log(`Found ${response._embedded.events.length} events from Ticketmaster`)
@@ -122,6 +127,7 @@ export class ScheduledJobManager {
         for (const event of response._embedded.events) {
           try {
             const concertData = ticketmasterClient.transformEvent(event)
+            console.log('Attempting to upsert concert:', concertData)
             await this.upsertConcert(concertData)
             processed++
           } catch (error) {
@@ -130,8 +136,10 @@ export class ScheduledJobManager {
         }
       } else {
         console.log('No events found in Ticketmaster response')
+        console.log('Full response structure:', JSON.stringify(response, null, 2))
       }
     } catch (error) {
+      console.error('Ticketmaster fetch error:', error)
       errors.push(`Ticketmaster API error: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
 

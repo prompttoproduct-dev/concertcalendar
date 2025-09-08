@@ -165,7 +165,10 @@ export class TicketmasterClient {
     }
 
     const url = `${this.baseUrl}/events.json?${searchParams.toString()}`
-    return this.makeRequest(url)
+    console.log('Ticketmaster API Request URL:', url)
+    const response = await this.makeRequest(url)
+    console.log('Ticketmaster API Raw Response:', response)
+    return response
   }
 
   async getGenres(): Promise<any> {
@@ -178,6 +181,8 @@ export class TicketmasterClient {
   }
 
   transformEvent(event: TicketmasterEvent): Partial<Concert> {
+    console.log('Transforming Ticketmaster event:', event)
+    
     if (!event || !event.id) {
       throw new Error('Invalid event data provided to transformEvent')
     }
@@ -202,7 +207,7 @@ export class TicketmasterClient {
       time = dateTime.toTimeString().split(' ')[0] // HH:MM:SS format
     }
 
-    return {
+    const transformed = {
       external_id: event.id,
       title: event.name,
       artist: artist,
@@ -213,6 +218,9 @@ export class TicketmasterClient {
       image_url: image?.url,
       source: 'ticketmaster'
     }
+    
+    console.log('Transformed Concert Data:', transformed)
+    return transformed
   }
 }
 
