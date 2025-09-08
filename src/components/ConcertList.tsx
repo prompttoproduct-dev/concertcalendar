@@ -16,6 +16,7 @@ const ConcertCardSkeleton = () => (
     <div className="space-y-3">
       <div className="h-6 bg-muted rounded w-3/4" />
       <div className="h-4 bg-muted rounded w-1/2" />
+      <div className="h-4 bg-muted rounded w-2/3" />
       <div className="space-y-2">
         <div className="h-3 bg-muted rounded w-full" />
         <div className="h-3 bg-muted rounded w-2/3" />
@@ -81,19 +82,14 @@ export const ConcertList = ({
       {concerts.map((concert) => (
         <ConcertCard
           key={concert.id}
+          title={concert.title || concert.artist}
           artist={concert.artist}
-          venue={concert.venue?.name || 'TBA'}
-          date={new Date(concert.date).toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric'
-          })}
-          location={`${concert.venue?.borough?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'NYC'}, NY`}
-          price={concert.price === 'free' ? 'FREE' : `$${concert.price}`}
-          image={concert.image_url || `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&h=600&fit=crop&q=80`}
-          genres={concert.genres}
-          ticketUrl={concert.ticket_url}
-          description={concert.description}
+          venue={concert.venue}
+          date={concert.date}
+          time={concert.time}
+          price={concert.price}
+          image={concert.image_url}
+          ticketUrl={concert.url}
         />
       ))}
     </div>

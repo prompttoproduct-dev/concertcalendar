@@ -1,16 +1,15 @@
 import React from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { concertQueries, type Concert, type Venue, type Borough } from '@/lib/supabase'
+import { concertQueries, type Concert, type Source } from '@/lib/supabase'
 import { supabase } from '@/integrations/supabase/client'
 
-export type { Borough } from '@/lib/supabase'
+export type { Source } from '@/lib/supabase'
 
 export type PriceRange = 'free' | '0-35' | '35-50' | '50-100' | '100+';
 
 export interface SearchFilters {
   query?: string
-  genre?: string
-  borough?: Borough
+  source?: Source
   priceRange?: PriceRange
   dateRange?: { start: string; end: string }
   sortBy?: 'date-asc' | 'date-desc' | 'price-asc' | 'price-desc' | 'artist-asc' | 'artist-desc'
@@ -32,16 +31,6 @@ export const useSearchConcerts = (filters: SearchFilters) => {
     queryFn: () => concertQueries.search(filters),
     enabled: Object.keys(filters).length > 0,
     staleTime: 2 * 60 * 1000, // 2 minutes
-  })
-}
-
-// Hook for getting concerts by genre
-export const useConcertsByGenre = (genre: string) => {
-  return useQuery({
-    queryKey: ['concerts', 'genre', genre],
-    queryFn: () => concertQueries.getByGenre(genre),
-    enabled: !!genre,
-    staleTime: 5 * 60 * 1000,
   })
 }
 
